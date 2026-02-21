@@ -14,6 +14,21 @@ function crawl
     set file_data (find . -type f -not -path '*/.*' -not -path './node_modules*' -printf "%T@ %TY-%Tm-%Td %p\n" 2>/dev/null | sort -nr | head -n 50)
 
     set context_file "temp_crawl_data.txt"
+    begin
+        echo "START_OF_MANIFEST"
+        
+        for f in $files
+            echo "--------------------------------------------------"
+            echo "FILE: $f"
+            echo "LAST_MODIFIED: "(date -r $f "+%Y-%m-%d")
+            echo "--- START OF FIRST 10 LINES ---"
+
+            # Read first 10 lines. If a specific file is unreadable, ignore error.
+            head -n 10 "$f" 2>/dev/null
+
+            echo "--- END OF FIRST 10 LINES ---"
+            echo ""
+        end
     echo "START_OF_MANIFEST" > $context_file
     
     for line in $file_data
@@ -29,11 +44,8 @@ function crawl
         # Read first 10 lines. If a specific file is unreadable, ignore error.
         head -n 10 "$f_path" 2>/dev/null >> $context_file
         
-        echo "--- END OF FIRST 10 LINES ---" >> $context_file
-        echo "" >> $context_file
-    end
-    
-    echo "END_OF_MANIFEST" >> $context_file
+        echo "END_OF_MANIFEST"
+    end > $context_file
 
     echo "🧠 Sending data to Gemini..."
     
