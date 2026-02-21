@@ -11,19 +11,23 @@ function crawl
     echo "🔍 Scanning for files..."
     
     # THE FIX: '2>/dev/null' silences the "Permission denied" errors so it doesn't stop.
-    set files (find . -type f -not -path '*/.*' -not -path './node_modules*' -printf "%T@ %p\n" 2>/dev/null | sort -nr | cut -d' ' -f2- | head -n 50)
+    set file_data (find . -type f -not -path '*/.*' -not -path './node_modules*' -printf "%T@ %TY-%Tm-%Td %p\n" 2>/dev/null | sort -nr | head -n 50)
 
     set context_file "temp_crawl_data.txt"
     echo "START_OF_MANIFEST" > $context_file
     
-    for f in $files
+    for line in $file_data
+        set -l parts (string split -m 2 " " $line)
+        set -l f_date $parts[2]
+        set -l f_path $parts[3]
+
         echo "--------------------------------------------------" >> $context_file
-        echo "FILE: $f" >> $context_file
-        echo "LAST_MODIFIED: "(date -r $f "+%Y-%m-%d") >> $context_file
+        echo "FILE: $f_path" >> $context_file
+        echo "LAST_MODIFIED: $f_date" >> $context_file
         echo "--- START OF FIRST 10 LINES ---" >> $context_file
         
         # Read first 10 lines. If a specific file is unreadable, ignore error.
-        head -n 10 "$f" 2>/dev/null >> $context_file
+        head -n 10 "$f_path" 2>/dev/null >> $context_file
         
         echo "--- END OF FIRST 10 LINES ---" >> $context_file
         echo "" >> $context_file
